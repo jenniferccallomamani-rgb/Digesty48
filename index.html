@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>DIGESTY – Comidas suaves para estudiantes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --azul: #0077ff; /* azul fosforescente más atractivo */
+      --header-h: 72px;
+    }
+    section[id] {
+      scroll-margin-top: calc(var(--header-h) + 16px);
+    }
+    .tab-active {background:var(--azul);color:#fff;}
+    .menu-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+  <!-- CARRITO -->
+  <aside id="cartPanel" class="fixed top-0 right-0 w-80 h-full bg-white shadow-2xl border-l border-slate-200 z-50 translate-x-full transition-transform">
+    <div class="flex items-center justify-between px-4 py-3 border-b">
+      <h2 class="font-semibold text-lg">Mi pedido</h2>
+      <button onclick="toggleCart()" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+    </div>
+    <div id="cartItems" class="p-4 space-y-3 h-[60%] overflow-y-auto text-sm">
+      <p id="emptyCartText" class="text-slate-400 text-sm">Aún no agregas nada.</p>
+    </div>
+    <div class="px-4 py-4 border-t space-y-2">
+      <div class="flex justify-between text-sm">
+        <span>Subtotal</span><span id="cartSubtotal">S/ 0.00</span>
+      </div>
+      <label class="flex flex-col text-xs text-slate-500">
+        Delivery
+        <select id="deliverySelect" class="mt-1 border rounded px-2 py-1 text-sm" onchange="updateTotal()">
+          <option value="0">Recojo en local (S/ 0)</option>
+          <option value="6">UCSP – San Lázaro (S/ 6)</option>
+          <option value="6">UTP – La Salle (S/ 6)</option>
+          <option value="8">Centro AQP (S/ 8)</option>
+          <option value="10">Otros distritos (S/ 10)</option>
+        </select>
+      </label>
+      <div class="flex justify-between text-sm font-semibold">
+        <span>Total</span><span id="cartTotal">S/ 0.00</span>
+      </div>
+      <button onclick="sendWhatsapp()" class="w-full bg-[var(--azul)] text-white py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+        Terminar pedido
+      </button>
+      <p class="text-[10px] text-slate-400">*Pensado para gastritis. Ante dolor fuerte, ir al médico.*</p>
+    </div>
+  </aside>
+
+  <!-- NAV -->
+  <header class="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-full bg-[var(--azul)] text-white flex items-center justify-center text-xs font-bold">DG</div>
+        <span class="font-semibold tracking-tight">DIGESTY</span>
+      </div>
+      <nav class="hidden md:flex gap-6 text-sm">
+        <a href="#comidas" class="hover:text-[var(--azul)]">Comidas</a>
+        <a href="#ubicaciones" class="hover:text-[var(--azul)]">Ubicaciones</a>
+        <a href="#faq" class="hover:text-[var(--azul)]">Preguntas</a>
+      </nav>
+      <button onclick="toggleCart()" class="relative bg-[var(--azul)] text-white px-4 py-2 rounded-lg text-sm hover:opacity-90 transition">
+        Carrito
+        <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-[10px] rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="bg-white">
+    <div class="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-2 gap-8 items-center">
+      <div class="space-y-4">
+        <p class="text-xs uppercase tracking-[0.3em] text-[var(--azul)]">Arequipa – universidades</p>
+        <h1 class="text-3xl md:text-4xl font-bold leading-tight">Comidas saludables para gastritis, listas para llevar a tu campus.</h1>
+        <p class="text-slate-600 text-sm">Desayunos, almuerzos y cenas suaves. Lo preparan restaurantes cerca de tu universidad o instituto.</p>
+      <a href="#comidas" class="inline-block bg-[var(--azul)] text-white px-5 py-3 rounded-lg text-sm font-medium hover:opacity-90">
+  Ordena aquí
+</a>
+      </div>
+      <div class="rounded-xl overflow-hidden border border-slate-100">
+        <img src="https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=1400&auto=format&fit=crop" class="w-full h-full object-cover" alt="Estudiantes comiendo">
+      </div>
+    </div>
+  </section>
+
+  <!-- COMIDAS (antes MENÚ) -->
+  <section id="comidas" class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h2 class="text-2xl font-semibold">Comidas Digesty</h2>
+        <p class="text-sm text-slate-500">Recomendadas para gastritis / estómago sensible.</p>
+      </div>
+      <div class="flex gap-2 text-sm">
+        <button id="tabDes" onclick="showCategory('desayunos')" class="px-4 py-2 rounded-full border text-slate-700 tab-active">Desayunos</button>
+        <button id="tabAlm" onclick="showCategory('almuerzos')" class="px-4 py-2 rounded-full border text-slate-700">Almuerzos</button>
+        <button id="tabCen" onclick="showCategory('cenas')" class="px-4 py-2 rounded-full border text-slate-700">Cenas</button>
+      </div>
+    </div>
+
+    <!-- DESAYUNOS (9) -->
+    <div id="desayunos" class="grid md:grid-cols-3 gap-5">
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/VYCXJ9Vz/desayuno-1.jpg" alt="Avena cocida con manzana">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Avena cocida con manzana</h3>
+          <p class="text-xs text-slate-500">Suave, sin cítricos.</p>
+          <p class="font-semibold text-sm">S/ 6.00</p>
+          <button onclick="addToCart('Avena cocida con manzana', 6)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/JjQjLq3C/desayuno-2.jpg" alt="Pan blanco con huevo sancochado">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pan blanco con huevo sancochado</h3>
+          <p class="text-xs text-slate-500">Desayuno básico.</p>
+          <p class="font-semibold text-sm">S/ 7.00</p>
+          <button onclick="addToCart('Pan blanco con huevo sancochado', 7)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/XxbjM0zd/desayuno-3.jpg" alt="Yogur deslactosado con galletas">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Yogur deslactosado con galletas</h3>
+          <p class="text-xs text-slate-500">Frío y digestivo.</p>
+          <p class="font-semibold text-sm">S/ 7.50</p>
+          <button onclick="addToCart('Yogur deslactosado con galletas', 7.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/rfmzHWj0/desayuno-4.jpg" alt="Sándwich de pollo plancha">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Sándwich de pollo plancha</h3>
+          <p class="text-xs text-slate-500">Pechuga sin condimento.</p>
+          <p class="font-semibold text-sm">S/ 8.00</p>
+          <button onclick="addToCart('Sándwich de pollo plancha', 8)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/6JXdckYg/desayuno-5.jpg" alt="Puré de plátano con tostadas">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Puré de plátano con tostadas</h3>
+          <p class="text-xs text-slate-500">Dulce natural.</p>
+          <p class="font-semibold text-sm">S/ 6.50</p>
+          <button onclick="addToCart('Puré de plátano con tostadas', 6.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/k642NPfh/desayuno-6.jpg" alt="Pan con queso fresco">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pan con queso fresco</h3>
+          <p class="text-xs text-slate-500">Bajo en grasa.</p>
+          <p class="font-semibold text-sm">S/ 6.50</p>
+          <button onclick="addToCart('Pan con queso fresco', 6.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/fd1cJcQM/desayuno-7.jpg" alt="Infusión de manzanilla + pan">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Infusión de manzanilla + pan</h3>
+          <p class="text-xs text-slate-500">Calmante.</p>
+          <p class="font-semibold text-sm">S/ 6.00</p>
+          <button onclick="addToCart('Infusión de manzanilla + pan', 6)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/fZFpDKs/desayuno-8.jpg" alt="Pan con palta y huevo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pan con palta y huevo</h3>
+          <p class="text-xs text-slate-500">Grasa buena, suave.</p>
+          <p class="font-semibold text-sm">S/ 7.50</p>
+          <button onclick="addToCart('Pan con palta y huevo', 7.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/MDSWFw8f/desayuno-9.jpg" alt="Avena fría con miel">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Avena fría con miel</h3>
+          <p class="text-xs text-slate-500">Refrescante.</p>
+          <p class="font-semibold text-sm">S/ 7.50</p>
+          <button onclick="addToCart('Avena fría con miel', 7.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALMUERZOS (9) -->
+    <div id="almuerzos" class="grid md:grid-cols-3 gap-5 hidden">
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/WWT0CqX5/almuerzo-1.jpg" alt="Pollo a la plancha con arroz">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pollo a la plancha con arroz</h3>
+          <p class="text-xs text-slate-500">Con verduras cocidas.</p>
+          <p class="font-semibold text-sm">S/ 10.00</p>
+          <button onclick="addToCart('Pollo a la plancha con arroz', 10)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/gFy9mq4r/almuerzo-2.jpg" alt="Pescado al vapor con papa">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pescado al vapor con papa</h3>
+          <p class="text-xs text-slate-500">Ligero y suave.</p>
+          <p class="font-semibold text-sm">S/ 11.00</p>
+          <button onclick="addToCart('Pescado al vapor con papa', 11)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/VY7g5khT/almuerzo-3.jpg" alt="Menú universitario digestivo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Menú universitario digestivo</h3>
+          <p class="text-xs text-slate-500">Sopa ligera + segundo.</p>
+          <p class="font-semibold text-sm">S/ 9.00</p>
+          <button onclick="addToCart('Menú universitario digestivo', 9)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/S7KgQJ5N/almuerzo-4.jpg" alt="Pechuga de pavo + puré">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pechuga de pavo + puré</h3>
+          <p class="text-xs text-slate-500">Sin condimentos fuertes.</p>
+          <p class="font-semibold text-sm">S/ 10.00</p>
+          <button onclick="addToCart('Pechuga de pavo + puré', 10)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/hJM9cdsH/almuerzo-5.jpg" alt="Tallarines blancos + verduras">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Tallarines blancos + verduras</h3>
+          <p class="text-xs text-slate-500">Fácil digestión.</p>
+          <p class="font-semibold text-sm">S/ 9.00</p>
+          <button onclick="addToCart('Tallarines blancos + verduras', 9)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/xt7b1rgp/almuerzo-6.jpg" alt="Arroz con pollo (sin ají)">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Arroz con pollo (sin ají)</h3>
+          <p class="text-xs text-slate-500">Versión suave.</p>
+          <p class="font-semibold text-sm">S/ 11.00</p>
+          <button onclick="addToCart('Arroz con pollo (sin ají)', 11)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/SDjBFYKC/almuerzo-7.jpg" alt="Lomo saltado sin fritura">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Lomo saltado sin fritura</h3>
+          <p class="text-xs text-slate-500">Carne magra.</p>
+          <p class="font-semibold text-sm">S/ 12.00</p>
+          <button onclick="addToCart('Lomo saltado sin fritura', 12)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/nsZHZ101/almuerzo-8.jpg" alt="Quinua con verduras cocidas">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Quinua con verduras cocidas</h3>
+          <p class="text-xs text-slate-500">Sin irritantes.</p>
+          <p class="font-semibold text-sm">S/ 8.00</p>
+          <button onclick="addToCart('Quinua con verduras cocidas', 8)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/p6056pL0/almuerzo-9.jpg" alt="Sopa de pollo casera">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Sopa de pollo casera</h3>
+          <p class="text-xs text-slate-500">Para media jornada.</p>
+          <p class="font-semibold text-sm">S/ 8.50</p>
+          <button onclick="addToCart('Sopa de pollo casera', 8.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENAS (9) -->
+    <div id="cenas" class="grid md:grid-cols-3 gap-5 hidden">
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/gLmhYGWS/cena-1.jpg" alt="Crema de verduras + pollo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Crema de verduras + pollo</h3>
+          <p class="text-xs text-slate-500">Cierra el día ligero.</p>
+          <p class="font-semibold text-sm">S/ 9.00</p>
+          <button onclick="addToCart('Crema de verduras + pollo', 9)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/cnyw0Pw/cena-2.jpg" alt="Tortilla de claras">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Tortilla de claras</h3>
+          <p class="text-xs text-slate-500">Baja en grasa.</p>
+          <p class="font-semibold text-sm">S/ 8.00</p>
+          <button onclick="addToCart('Tortilla de claras', 8)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/604CqvcS/cena-3.jpg" alt="Puré de zapallo + arroz">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Puré de zapallo + arroz</h3>
+          <p class="text-xs text-slate-500">Digestivo y blando.</p>
+          <p class="font-semibold text-sm">S/ 8.50</p>
+          <button onclick="addToCart('Puré de zapallo + arroz', 8.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/VpNXj287/cena-4.jpg" alt="Sopa de quinua + pollo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Sopa de quinua + pollo</h3>
+          <p class="text-xs text-slate-500">Proteína suave.</p>
+          <p class="font-semibold text-sm">S/ 9.00</p>
+          <button onclick="addToCart('Sopa de quinua + pollo', 9)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/39PtRJVX/cena-5.jpg" alt="Tallarines con verduras sancochadas">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Tallarines con verduras sancochadas</h3>
+          <p class="text-xs text-slate-500">Sin salsas.</p>
+          <p class="font-semibold text-sm">S/ 10.00</p>
+          <button onclick="addToCart('Tallarines con verduras sancochadas', 10)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/ymy0LSPH/cena-6.jpg" alt="Pescado al vapor + papa">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Pescado al vapor + papa</h3>
+          <p class="text-xs text-slate-500">Para la noche.</p>
+          <p class="font-semibold text-sm">S/ 11.00</p>
+          <button onclick="addToCart('Pescado al vapor + papa', 11)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/HTC0QgdP/cena-7.jpg" alt="Ensalada tibia con pollo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Ensalada tibia con pollo</h3>
+          <p class="text-xs text-slate-500">Verduras cocidas.</p>
+          <p class="font-semibold text-sm">S/ 8.50</p>
+          <button onclick="addToCart('Ensalada tibia con pollo', 8.5)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/6cRmLkd1/cena-8.jpg" alt="Puré de camote + huevo">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Puré de camote + huevo</h3>
+          <p class="text-xs text-slate-500">Dulce natural.</p>
+          <p class="font-semibold text-sm">S/ 9.00</p>
+          <button onclick="addToCart('Puré de camote + huevo', 9)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg border hover:shadow-md flex flex-col menu-card">
+        <img src="https://i.ibb.co/ZptCp3wg/cena-9.jpg" alt="Omelette de espinaca">
+        <div class="p-4">
+          <h3 class="font-semibold text-sm">Omelette de espinaca</h3>
+          <p class="text-xs text-slate-500">Ideal para gastritis.</p>
+          <p class="font-semibold text-sm">S/ 8.00</p>
+          <button onclick="addToCart('Omelette de espinaca', 8)" class="bg-[#0f172a] text-white text-xs py-2 rounded-lg mt-2 w-full">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UBICACIONES -->
+  <section id="ubicaciones" class="max-w-6xl mx-auto px-4 py-10">
+    <h2 class="text-2xl font-semibold mb-3">Restaurantes afiliados</h2>
+    <p class="text-sm text-slate-500 mb-4">Universidades de Arequipa donde está disponible el servicio.</p>
+    <div class="grid md:grid-cols-[240px_1fr] gap-6">
+      <div class="bg-white rounded-lg border p-4 space-y-3 text-sm">
+        <p class="font-semibold">Universidades atendidas</p>
+        <ul class="space-y-2">
+          <li>• UCSP – San Lázaro</li>
+          <li>• UTP – Parque Industrial / La Salle</li>
+          <li>• UCSM – Umacollo</li>
+          <li>• Universidad La Salle – Cercado</li>
+          <li>• Centro de Arequipa (punto oficial)</li>
+        </ul>
+      </div>
+      <div class="rounded-xl overflow-hidden border border-slate-200">
+        <iframe
+          src="https://www.google.com/maps?q=universidades%20arequipa&output=embed"
+          width="100%" height="350" style="border:0;" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </section>
+
+   <!-- FAQ -->
+  <section id="faq" class="py-10 bg-[var(--azul)]">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-2xl font-semibold mb-4 text-white">Preguntas frecuentes</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <details class="bg-white rounded-lg p-4 border" open>
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿Las comidas son adecuadas para gastritis?</summary>
+          <p class="text-sm text-slate-600 mt-2">Sí. Evitamos ají, frituras y salsas rojas. Son opciones suaves para estómago sensible.</p>
+        </details>
+        <details class="bg-white rounded-lg p-4 border">
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿Puedo pedir cambios en mi menú?</summary>
+          <p class="text-sm text-slate-600 mt-2">Sí, en el mensaje de WhatsApp escribe “sin cebolla”, “sin lácteos”, etc.</p>
+        </details>
+        <details class="bg-white rounded-lg p-4 border">
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿A qué universidades llegan?</summary>
+          <p class="text-sm text-slate-600 mt-2">UCSP, UTP, UCSM, La Salle y zonas del Centro de Arequipa.</p>
+        </details>
+        <details class="bg-white rounded-lg p-4 border">
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿Cómo pago?</summary>
+          <p class="text-sm text-slate-600 mt-2">Pago contra entrega (efectivo o Yape/Plin). Próximamente pago en línea.</p>
+        </details>
+        <details class="bg-white rounded-lg p-4 border">
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿Cuánto cuesta el delivery?</summary>
+          <p class="text-sm text-slate-600 mt-2">Depende de la zona: desde S/6 hasta S/10.</p>
+        </details>
+        <details class="bg-white rounded-lg p-4 border">
+          <summary class="font-semibold text-sm cursor-pointer text-[var(--azul)]">¿Puedo pedir para varios compañeros?</summary>
+          <p class="text-sm text-slate-600 mt-2">Sí, agrega varios platos al carrito y envía un solo mensaje de pedido.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-6 text-center text-xs text-slate-400">
+    DIGESTY © 2025 – Comida suave para estudiantes de Arequipa.
+  </footer>
+
+  <!-- JS -->
+  <script>
+    function scrollToSection(id){
+      const el=document.getElementById(id);
+      if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+    }
+
+    function showCategory(cat){
+      ['desayunos','almuerzos','cenas'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.classList.add('hidden');
+      });
+      document.getElementById(cat).classList.remove('hidden');
+      document.querySelectorAll('.tab-active').forEach(t=>t.classList.remove('tab-active'));
+      document.getElementById('tab'+cat.charAt(0).toUpperCase()+cat.slice(1,3)).classList.add('tab-active');
+    }
+
+    let cart = [];
+    function toggleCart(){document.getElementById('cartPanel').classList.toggle('translate-x-full');}
+    function addToCart(name, price){cart.push({name,price});renderCart();toggleCart();}
+    function renderCart(){
+      const itemsDiv=document.getElementById('cartItems');
+      const empty=document.getElementById('emptyCartText');
+      const badge=document.getElementById('cartBadge');
+      itemsDiv.innerHTML='';
+      if(cart.length===0){empty.style.display='block';badge.classList.add('hidden');}
+      else{
+        empty.style.display='none';badge.classList.remove('hidden');badge.textContent=cart.length;
+        cart.forEach((item,i)=>{
+          itemsDiv.innerHTML+=`<div class="flex justify-between bg-slate-50 px-3 py-2 rounded-lg"><div><p>${item.name}</p><p class='text-xs text-slate-400'>S/ ${item.price}</p></div><button onclick='removeFromCart(${i})' class='text-red-500 text-xs'>Quitar</button></div>`;
+        });
+      }
+      updateTotal();
+    }
+    function removeFromCart(i){cart.splice(i,1);renderCart();}
+    function updateTotal(){
+      const subtotal=cart.reduce((a,b)=>a+b.price,0);
+      const delivery=Number(document.getElementById('deliverySelect').value);
+      document.getElementById('cartSubtotal').textContent="S/ "+subtotal.toFixed(2);
+      document.getElementById('cartTotal').textContent="S/ "+(subtotal+delivery).toFixed(2);
+    }
+    function clearCart(){cart=[];document.getElementById('deliverySelect').value="0";renderCart();}
+    function sendWhatsapp(){
+      const delivery=Number(document.getElementById('deliverySelect').value);
+      const subtotal=cart.reduce((s,it)=>s+it.price,0);
+      const total=subtotal+delivery;
+      const detalle=cart.map(c=>`• ${c.name} (S/ ${c.price})`).join('%0A');
+      const msg=`Hola DIGESTY 👋, quiero pedir:%0A${detalle}%0ADelivery: S/ ${delivery}%0ATotal: S/ ${total.toFixed(2)}%0AEntrega en: [tu universidad]`;
+      alert("Pon tu número de WhatsApp en el código para enviarlo.\n\nMensaje:\n"+decodeURIComponent(msg));
+      clearCart();
+    }
+  </script>
+
+</body>
+</html>
+
